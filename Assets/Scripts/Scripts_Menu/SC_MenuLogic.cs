@@ -11,12 +11,6 @@ using AssemblyCSharp;
 
 public class SC_MenuLogic : MonoBehaviour
 {
-    
-    public enum Screens
-    {
-        MainMenu, Loading, Options, StudentInfo, Multiplayer
-    };
-
     #region Variables
     public Slider musicSlider;
     public TMP_Text musicSliderNumber;
@@ -35,6 +29,10 @@ public class SC_MenuLogic : MonoBehaviour
     private Screens prevScreen;
     bool back = false;
 
+    public enum Screens
+    {
+        MainMenu, Loading, Options, StudentInfo, Multiplayer
+    };
     #endregion
 
     #region MonoBehaviour
@@ -58,9 +56,6 @@ public class SC_MenuLogic : MonoBehaviour
             Application.Quit();
     }
 
-    #endregion
-    #region MultiPlayer
-    
     #endregion
 
     #region Music

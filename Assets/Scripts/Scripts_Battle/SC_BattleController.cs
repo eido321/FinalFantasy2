@@ -51,6 +51,12 @@ public class SC_BattleController : MonoBehaviour
             curBattleLogic.Restart();
     }
 
+    public void AcceptRestart(bool status)
+    {
+        if (curBattleLogic != null)
+            curBattleLogic.AcceptRestart(status);
+    }
+
     public void ShowIndicator(string _name)
     {
         if(curBattleLogic != null)

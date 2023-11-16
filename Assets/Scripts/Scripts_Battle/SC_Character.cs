@@ -22,7 +22,7 @@ public class SC_Character : SC_Entity
     #endregion
 
     #region Inititiation
-    public void CopyFrom(SC_Character other)
+    public void CopyFrom(SC_Character other)    /* copy constructor for a character */
     {
         this.weapon_ = other.weapon_;
         this.job_ = other.job_;
@@ -57,18 +57,21 @@ public class SC_Character : SC_Entity
 
     private void InitSpells()
     {
-        foreach (SC_Magic magic in SC_Magic.Allspells_)
+        if (spells_.Count == 0)
         {
-            if (magic.jobs_.Contains(job_))
+            foreach (SC_Magic magic in SC_MagicController.Allspells_)
             {
-                spells_.Add(magic);
+                if (magic.jobs_.Contains(job_))
+                {
+                    spells_.Add(magic);
+                }
             }
         }
     }
     #endregion
 
     #region Logic
-    public int CastSpell(SC_Magic spell, SC_Monster target)
+    public int CastSpell(SC_Magic spell, SC_Monster target)     /* casts a spell on a monster */
     {
         if (spell.SFX_ != null)
             spell.SFX_.Play();
@@ -78,11 +81,23 @@ public class SC_Character : SC_Entity
             spellDamage += 10;
         target.health_ -= spellDamage;
         target.GetComponentInChildren<TMP_Text>().text = "-" + spellDamage.ToString();
-        StartCoroutine(RestMonsterText(2f, target));
+        StartCoroutine(RestMonsterText(2f, target.GetComponentInChildren<TMP_Text>()));
         return target.health_;
     }
 
-    public void Heal(SC_Magic spell, SC_Character target)
+    public int CastSpell(SC_Magic spell, SC_Character target)   /* casts a spell on an enemy character */
+    {
+        if (spell.SFX_ != null)
+            spell.SFX_.Play();
+        mana_ -= spell.mpCost_;
+        int spellDamage = CalculateSpellDamage(spell);
+        if (spell.type_ == target.weakness_)
+            spellDamage += 10;
+        StartCoroutine(RestMonsterText(2f, target.GetComponentInChildren<TMP_Text>()));
+        return spellDamage;
+    }
+
+    public int Heal(SC_Magic spell, SC_Character target)    /* casts an healing spell on a teamate */
     {
         if (spell.SFX_ != null)
             spell.SFX_.Play();
@@ -91,9 +106,22 @@ public class SC_Character : SC_Entity
         StartCoroutine(RestPlayerText(2f, target));
         target.health_ += healingAmount;
         mana_ -= spell.mpCost_;
+        return healingAmount;
     }
 
-    public void Revive(SC_Magic spell, SC_Character target, int maxHp)
+    public int Heal(SC_Magic spell, SC_Character target,int heal)   /* casts an healing spell on a teamate but you can choose how much is healed */
+    {
+        if (spell.SFX_ != null)
+            spell.SFX_.Play();
+        int healingAmount = heal;
+        target.GetComponentInChildren<TMP_Text>().text = "+" + healingAmount.ToString();
+        StartCoroutine(RestPlayerText(2f, target));
+        target.health_ += healingAmount;
+        mana_ -= spell.mpCost_;
+        return healingAmount;
+    }
+
+    public int Revive(SC_Magic spell, SC_Character target, int maxHp)   /* revives a teamate */
     {
         if (!target.Alive)
         {
@@ -102,9 +130,10 @@ public class SC_Character : SC_Entity
             target.health_ = (int)(maxHp * 0.3);
             target.ReturnToIdle();
         }
+        return maxHp;
     }
 
-    public void Buff(SC_Magic spell, SC_Character target)
+    public void Buff(SC_Magic spell, SC_Character target)   /* buffes a teamate */
     {
         if (spell.SFX_ != null)
             spell.SFX_.Play();
@@ -124,25 +153,34 @@ public class SC_Character : SC_Entity
         }
     }
 
-    private int CalculateSpellDamage(SC_Magic spell)
+    private int CalculateSpellDamage(SC_Magic spell)    /* calculates the spell damage */
     {
         int charMagPOW = intellect_ / 4 + spell.attack_;
         int randomValue = Random.Range(0, charMagPOW + 1);
         return charMagPOW + randomValue;
     }
 
-    public int NormalAttack(SC_Monster target)
+    public int NormalAttack(SC_Monster target)      /* normal attack logic */
     {
-        StartCoroutine(MoveLeftAndReturn());
+        StartCoroutine(MoveAndReturn(-1));
         anim.Play("attack_" + name_);
         int attackDamage = CalculateAttackDamage();
         target.health_ -= attackDamage;
         target.GetComponentInChildren<TMP_Text>().text = "-" + attackDamage.ToString();
-        StartCoroutine(RestMonsterText(2f, target));
+        StartCoroutine(RestMonsterText(2f, target.GetComponentInChildren<TMP_Text>()));
         return target.health_;
     }
 
-    private int CalculateAttackDamage()
+    public int NormalAttack(SC_Character target,int direction)   /* normal attack logic with an option to choses the knockback direction of an enemy */
+    {
+        StartCoroutine(MoveAndReturn(direction));
+        anim.Play("attack_" + name_);
+        int attackDamage = CalculateAttackDamage();
+        StartCoroutine(RestMonsterText(2f, target.GetComponentInChildren<TMP_Text>()));
+        return attackDamage;
+    }
+
+    private int CalculateAttackDamage()     /* calculates the damage of a normal attack */
     {
         int totalDamage = strength_ / 2 + weapon_.attack_;
         bool isCriticalHit = Random.Range(0f, 1f) < 0.05f;
@@ -154,22 +192,25 @@ public class SC_Character : SC_Entity
         return totalDamage;
     }
 
-    public void Win()
+    public void Win()   /* the character win animation */
     {
         anim.Play("Win_" + name_);
     }
-    public void ReturnToIdle()
+    public void ReturnToIdle()      /* return the character idle animation */
     {
         anim.Play("Idle_" + name_);
     }
 
-    public void Death()
+    public void Death()         /* starts the character death animation */
     {
         StartCoroutine(DeathCoroutine());
     }
 
-    public void TakeDamage(int damage)
+    public void TakeDamage(int damage)      /* update the damage a character takes */
     {
+        health_ -= damage;
+        if (health_ < 0f)
+            health_ = 0;
         StartCoroutine(DamageCoroutine(damage));
     }
 
@@ -182,10 +223,10 @@ public class SC_Character : SC_Entity
         anim.Play("Death_" + name_);
     }
 
-    private IEnumerator MoveLeftAndReturn()
+    private IEnumerator MoveAndReturn(int direction)       /* knockback the enemy */
     {
         Vector3 initialPosition = transform.position;
-        Vector3 targetPosition = initialPosition + new Vector3(-3f, 0f, 0f);
+        Vector3 targetPosition = initialPosition + new Vector3(3f* direction, 0f, 0f);
         while (transform.position != targetPosition)
         {
             transform.position = Vector3.MoveTowards(transform.position, targetPosition, Time.deltaTime * 4);
@@ -199,20 +240,20 @@ public class SC_Character : SC_Entity
         }
     }
 
-    private IEnumerator RestMonsterText(float wait, SC_Monster target)
+    private IEnumerator RestMonsterText(float wait, TMP_Text target)    /* rest the targeted monster damage text */
     {
         yield return new WaitForSeconds(wait);
         target.GetComponentInChildren<TMP_Text>().text = "";
     }
 
-    private IEnumerator RestPlayerText(float wait, SC_Character target)
+    private IEnumerator RestPlayerText(float wait, SC_Character target)     /* rest the targeted player damage text */
     {
         yield return new WaitForSeconds(wait);
         target.GetComponentInChildren<TMP_Text>().text = "";
     }
 
 
-    private IEnumerator DamageCoroutine(int damage)
+    private IEnumerator DamageCoroutine(int damage)     /* updates the attack damage and animations in display */
     {
         yield return new WaitForSeconds(2.2f);
         GetComponentInChildren<TMP_Text>().text = "-" + damage.ToString();

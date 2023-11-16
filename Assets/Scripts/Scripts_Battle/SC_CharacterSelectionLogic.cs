@@ -19,6 +19,7 @@ public class SC_CharacterSelectionLogic : MonoBehaviour
     public GameObject GameBox;
     public GameObject _FadeSprite;
     public SC_BattleLogic battleLogic;
+    public GameObject rastartBtn;
 
     #endregion
 
@@ -59,7 +60,7 @@ public class SC_CharacterSelectionLogic : MonoBehaviour
     #endregion
 
     #region Logic
-    public void SelectCharacter(string name)
+    public void SelectCharacter(string name)    /* selects a character */
     {
         int count = 0;
         for (int i = 0; i < maxPlayers; i++)
@@ -81,7 +82,7 @@ public class SC_CharacterSelectionLogic : MonoBehaviour
         }
     }
 
-    public void Remove(string name)
+    public void Remove(string name)     /* diselect a character */
     {
         int keyToRemove = GlobalVariables.finalSelection_.FirstOrDefault(x => x.Value == name).Key;
 
@@ -99,10 +100,11 @@ public class SC_CharacterSelectionLogic : MonoBehaviour
         }
     }
 
-    public void StartGameSingleLogic()
+    public void StartGameSingleLogic()      /* starts the singleplayer game in case you have a full team */
     {
         if (GlobalVariables.finalSelection_.Count == maxPlayers)
         {
+            rastartBtn.GetComponent<Button>().interactable = true;
             foreach (GameObject obj in buttonSelection_.Values)
             {
                 obj.GetComponent<TMP_Text>().raycastTarget = false;
@@ -115,7 +117,7 @@ public class SC_CharacterSelectionLogic : MonoBehaviour
             Debug.Log("Must have a full team to play");
     }
 
-    public void StartGameMultiLogic()
+    public void StartGameMultiLogic()       /* starts the multiplayer game in case you have a full team */
     {
         if (GlobalVariables.finalSelection_.Count == maxPlayers)
         {

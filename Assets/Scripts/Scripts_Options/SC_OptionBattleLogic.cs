@@ -6,6 +6,8 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
 using UnityEngine.Audio;
+using AssemblyCSharp;
+using com.shephertz.app42.gaming.multiplayer.client;
 
 public class SC_OptionBattleLogic : MonoBehaviour
 {
@@ -21,11 +23,13 @@ public class SC_OptionBattleLogic : MonoBehaviour
     public TMP_Text SFXSliderNumber;
     public List<AudioSource> gameMusic;
     public List<AudioSource> gameSFX;
+    public GameObject restartBtn;
 
     public static bool _Open = false;
     #endregion
 
     #region MonoBehaviour
+
     private void Awake()
     {
         LoadMusic();
@@ -38,7 +42,8 @@ public class SC_OptionBattleLogic : MonoBehaviour
     }
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (Input.GetKeyDown(KeyCode.Escape) && !optionSeen)
+        {
             if (menuSeen)
             {
                 _Open = false;
@@ -51,6 +56,7 @@ public class SC_OptionBattleLogic : MonoBehaviour
                 menuBox_.SetActive(true);
                 menuSeen = true;
             }
+        }
     }
     #endregion
 
@@ -58,6 +64,8 @@ public class SC_OptionBattleLogic : MonoBehaviour
     private void InitSound()
     {
         optionBox_.SetActive(false);
+        if (restartBtn != null)
+            restartBtn.GetComponent<Button>().interactable = false;
         menuBox_.SetActive(false);
         setVolumeAudioSource(gameMusic, musicSlider.value / 100);
         setVolumeAudioSource(gameSFX, SFXSlider.value / 100);
@@ -124,9 +132,20 @@ public class SC_OptionBattleLogic : MonoBehaviour
         }
     }
 
+    public void SetMenuSeen(bool state)
+    {
+        menuSeen = state;
+    }
+
     public void Quit()
     {
         GlobalVariables.finalSelection_.Clear();
+        _Open = false;
+        if (GlobalVariables.gameState == GlobalVariables.GameState.MultiPlayer)
+        {
+            WarpClient.GetInstance().UnsubscribeRoom(GlobalVariables.roomId);
+            WarpClient.GetInstance().LeaveRoom(GlobalVariables.roomId);
+        }
         SceneManager.LoadScene(0);
     }
     #endregion

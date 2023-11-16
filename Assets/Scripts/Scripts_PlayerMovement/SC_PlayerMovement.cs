@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 public class SC_PlayerMovement : MonoBehaviour
 {
     #region Variables
-    public bool _DisableEncounter = false;
+    public bool _DisableEncounter;
     public float moveSpeed;
     public LayerMask overworldLayer;
     public GameObject _FadeSprite;
@@ -15,8 +15,8 @@ public class SC_PlayerMovement : MonoBehaviour
     public AudioSource _encounterAudio;
 
     private Animator animator;
-    private bool _Stop = false;
-    private bool _Over = false;
+    private bool _Stop;
+    private bool _Over;
     private Rigidbody2D rb;
     private bool isMoving;
     private Vector2 input;
@@ -29,9 +29,12 @@ public class SC_PlayerMovement : MonoBehaviour
         animator = GetComponent<Animator>();
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         StartCoroutine(FadeCoroutine(2f, 0f, _FadeSprite.GetComponent<SpriteRenderer>()));
+        _DisableEncounter= false;
+        _Stop = false;
+        _Over = false;
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         if (!isMoving && !_Stop && !_Over)
         {
@@ -87,7 +90,7 @@ public class SC_PlayerMovement : MonoBehaviour
     #endregion
 
     #region Logic
-    IEnumerator Move(Vector3 targetPos)
+    IEnumerator Move(Vector3 targetPos)         /* the character moving logic */
     {
         isMoving = true;
         while ((targetPos - transform.position).sqrMagnitude > Mathf.Epsilon)
@@ -101,7 +104,7 @@ public class SC_PlayerMovement : MonoBehaviour
             CheckForEncounters();
     }
 
-    private bool isWalkable(Vector3 targetPos)
+    private bool isWalkable(Vector3 targetPos)      /* checks if the tile the character is going to be in is valid */
     {
         if (Physics2D.OverlapCircle(targetPos, 0.1f, overworldLayer) != null)
         {
@@ -110,7 +113,7 @@ public class SC_PlayerMovement : MonoBehaviour
         return true;
     }
 
-    private void CheckForEncounters()
+    private void CheckForEncounters()       /* checks if the player encounterd a monster */
     {
 
         if (Random.Range(1, 101) <= 3)
@@ -138,7 +141,7 @@ public class SC_PlayerMovement : MonoBehaviour
         while (elapsedTime < duration)
         {
             spriteMaterial.color = Color.Lerp(startColor, targetColor, elapsedTime / duration);
-            elapsedTime += Time.deltaTime;
+            elapsedTime += Time.fixedDeltaTime;
             yield return null;
         }
         spriteMaterial.color = targetColor;

@@ -7,7 +7,8 @@ public class SC_Monster : SC_Entity
     #region MonoBehaviour
     private void Start()
     {
-        GetComponent<SpriteRenderer>().sprite = sprite_;
+        if (GlobalVariables.gameState == GlobalVariables.GameState.SinglePlayer)
+            GetComponent<SpriteRenderer>().sprite = sprite_;
     }
     #endregion
 

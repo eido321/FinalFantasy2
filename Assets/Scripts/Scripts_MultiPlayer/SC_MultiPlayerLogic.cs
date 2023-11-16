@@ -24,10 +24,11 @@ public class SC_MultiPlayerLogic : MonoBehaviour
 
     private int maxRoomUsers = 2;
     private string roomName = "ShenkarRoom";
-    public string roomId;
 
     public SC_BattleLogic battleLogic;
     public static string _SetPass;
+
+    private List<string> usedUsernames = new List<string>();
     #endregion
 
     #region Singleton
@@ -100,7 +101,8 @@ public class SC_MultiPlayerLogic : MonoBehaviour
         WarpClient.GetInstance().AddTurnBasedRoomRequestListener(listener);
         WarpClient.GetInstance().AddZoneRequestListener(listener);
 
-        GlobalVariables.userId = System.Guid.NewGuid().ToString();
+        /*        GlobalVariables.userId = System.Guid.NewGuid().ToString();*/
+        GlobalVariables.userId = GenerateUniqueUsername();
         Debug.Log("UserId: " + GlobalVariables.userId);
 
         WarpClient.GetInstance().Connect(GlobalVariables.userId);
@@ -163,10 +165,10 @@ public class SC_MultiPlayerLogic : MonoBehaviour
         Debug.Log("OnCreateRoom " + _IsSuccess + " " + _RoomId);
         if (_IsSuccess)
         {
-            roomId = _RoomId;
+            GlobalVariables.roomId = _RoomId;
             Debug.Log("Room have been created, RoomId: " + _RoomId);
-            WarpClient.GetInstance().JoinRoom(roomId);
-            WarpClient.GetInstance().SubscribeRoom(roomId);
+            WarpClient.GetInstance().JoinRoom(GlobalVariables.roomId);
+            WarpClient.GetInstance().SubscribeRoom(GlobalVariables.roomId);
         }
         else
         {
@@ -192,10 +194,10 @@ public class SC_MultiPlayerLogic : MonoBehaviour
             if (_properties.ContainsKey("Password") &&
                 _properties["Password"].ToString() == passedParams["Password"].ToString())
             {
-                roomId = eventObj.getData().getId();
-                Debug.Log("Received Room Info, joining room: " + roomId);
-                WarpClient.GetInstance().JoinRoom(roomId);
-                WarpClient.GetInstance().SubscribeRoom(roomId);
+                GlobalVariables.roomId = eventObj.getData().getId();
+                Debug.Log("Received Room Info, joining room: " + GlobalVariables.roomId);
+                WarpClient.GetInstance().JoinRoom(GlobalVariables.roomId);
+                WarpClient.GetInstance().SubscribeRoom(GlobalVariables.roomId);
             }
             else
             {
@@ -217,11 +219,7 @@ public class SC_MultiPlayerLogic : MonoBehaviour
 
     private void OnGameStarted(string _Sender, string _RoomId, string _NextTurn)
     {
-        Debug.Log("Game Started, Next Turn: " + _NextTurn);
-        unityObjects["SelectionUI"].SetActive(false);
-        unityObjects["GameUI"].SetActive(true);
-        battleLogic.StartGameLogic();
-
+        unityObjects["Menu_box_Restart"].GetComponent<Button>().interactable = true;
     }
 
     #endregion
@@ -238,5 +236,44 @@ public class SC_MultiPlayerLogic : MonoBehaviour
 
     #endregion
 
+    #region Uid
+    public string GenerateUniqueUsername()
+    {
+        string username = GenerateRandomUsername();
+        while (usedUsernames.Contains(username))
+        {
+            username = GenerateRandomUsername();
+        }
+        usedUsernames.Add(username);
+        return username;
+    }
 
+    private string GenerateRandomUsername()
+    {
+        string[] names = {
+    "ShadowHunter99", "DragonSlayer123", "MysticWizard", "SteelSamurai", "ViperQueen",
+    "StarshipPilot", "EternalSorcerer", "CyberNinjaX", "PirateCaptain", "BattleMage",
+    "RogueAssassin", "LunarKnight", "TigerClaw", "PhoenixRider", "DemonHunter666",
+    "WarpSpeedster", "MoonlitArcher", "CrimsonBlade", "ArcaneEnchantress", "IceStorm",
+    "Stormtrooper", "SavageWarrior", "MechWarlock", "VampireLord", "TechNinja",
+    "SorcerySerpent", "Firebrand", "AlphaWolf", "TimeTraveler", "SpacePirate",
+    "FairyTaleHero", "CosmicHunter", "Nightshade", "NeonDragon", "PsychoKiller",
+    "MysticalMonk", "SwordMaster", "ChronoMage", "BlackWidow", "StealthStriker",
+    "ThunderKnight", "RedPandaNinja", "VoidWanderer", "LoneSurvivor", "TheLastMage",
+    "BloodMoon", "SpectralSpecter", "DarkPhoenix", "TechSorcerer", "CyberSamurai",
+    "EclipseWitch", "MadMax", "OmegaDragon", "GrimReaper", "RagingBerserker",
+    "ElementalMage", "BlizzardNinja", "SkylineRider", "DesertWarrior", "Moonwalker",
+    "SolarSamurai", "NebulaNinja", "VoidWalker", "TimeWarpMage", "NovaKnight",
+    "JungleHunter", "InfernoWizard", "ElectricJester", "BloodthirstyVixen", "GladiatorGod",
+    "ShadowSorcerer", "GhostRider", "TechnoMage", "VampireQueen", "CrimsonRevenant",
+    "SorcererSupreme", "ThunderboltNinja", "DragonWarden", "DeathDealer", "SilentStalker",
+    "LunarGuardian", "WraithHunter", "StarfireSorcerer", "WarpNinja", "CosmicVoyager",
+    "MoonlightWarrior", "CrimsonPhantom", "FrostMage", "VoidShadow", "NightfallAssassin",
+    "ShadowBlade", "SolarFlareSamurai", "EtherealRogue", "MysticLancer", "SerpentSorcerer",
+    "DragonFang", "TimeShifter", "NeonShadow", "CyberPirate", "StormyNinja",
+    "FrostBane", "RogueReaper", "WickedWarlock", "EternalHunter", "OmegaSorcerer"
+};
+        return names[Random.Range(0, names.Length)] + Random.Range(1, 1000);
+    }
+    #endregion
 }

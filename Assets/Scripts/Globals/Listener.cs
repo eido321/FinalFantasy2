@@ -35,7 +35,10 @@ namespace AssemblyCSharp
 		public delegate void UserJoinRoomHandler(RoomData eventObj, string _UserName);
 		public static event UserJoinRoomHandler OnUserJoinRoom;
 
-		public delegate void StartGameAckHandler();
+        public delegate void OnUserLeftRoomHandler(RoomData eventObj, string username);
+        public static event OnUserLeftRoomHandler OnUserLeftRoom;
+
+        public delegate void StartGameAckHandler();
 		public static event StartGameAckHandler OnStartGameAck;
 
 		public delegate void GameStartedHandler(string _Sender, string _RoomId, string _NextTurn);
@@ -49,6 +52,9 @@ namespace AssemblyCSharp
 
 		public delegate void SendMoveAckHandler();
 		public static event SendMoveAckHandler OnSendMoveAck;
+
+		public delegate void OnPrivateChatReceivedHandler(string sender, string message);
+		public static event OnPrivateChatReceivedHandler OnPrivateChatReceived;
 
 		public delegate void MoveCompletedHandler(MoveEvent _Move);
 		public static event MoveCompletedHandler OnMoveCompleted;
@@ -221,10 +227,10 @@ namespace AssemblyCSharp
 		
 		public void onLeaveRoomDone (RoomEvent eventObj)
 		{
-			Debug.Log ("onLeaveRoomDone : " + eventObj.getResult());
-		}
-		
-		public void onGetLiveRoomInfoDone (LiveRoomInfoEvent eventObj)
+            Debug.Log("onLeaveRoomDone : " + eventObj.getResult());
+        }
+
+        public void onGetLiveRoomInfoDone (LiveRoomInfoEvent eventObj)
 		{
 			if (OnGetLiveRoomInfo != null)
 				OnGetLiveRoomInfo (eventObj);
@@ -253,17 +259,19 @@ namespace AssemblyCSharp
 		public void onSendChatDone (byte result)
 		{
 			Debug.Log ("onSendChatDone result : " + result);
-		}
+
+        }
 		
 		public void onSendPrivateChatDone(byte result)
 		{
-			Debug.Log ("onSendPrivateChatDone : " + result);
-		}
-		#endregion
-		
-		//UpdateRequestListener
-		#region UpdateRequestListener
-		public void onSendUpdateDone (byte result)
+            Debug.Log("onSendPrivateChatDone : " + result.ToString());
+
+        }
+        #endregion
+
+        //UpdateRequestListener
+        #region UpdateRequestListener
+        public void onSendUpdateDone (byte result)
 		{
 		}
 		public void onSendPrivateUpdateDone (byte result)
@@ -289,8 +297,9 @@ namespace AssemblyCSharp
 		
 		public void onUserLeftRoom (RoomData eventObj, string username)
 		{
-			Debug.Log ("onUserLeftRoom : " + username);
-		}
+            if (OnUserLeftRoom != null)
+                OnUserLeftRoom(eventObj, username);
+        }
 		
 		public void onUserJoinedRoom (RoomData eventObj, string username)
 		{
@@ -315,7 +324,8 @@ namespace AssemblyCSharp
 			
 		public void onPrivateChatReceived(string sender, string message)
 		{
-			Debug.Log ("onPrivateChatReceived : " + sender);
+			if (OnPrivateChatReceived != null)
+				OnPrivateChatReceived(sender, message);
 		}
 		
 		public void onMoveCompleted(MoveEvent move)
@@ -408,7 +418,8 @@ namespace AssemblyCSharp
 		public void onGetMoveHistoryDone(byte result, MoveEvent[] moves)
 		{
 		}
-		#endregion
-	}
+        #endregion
+
+    }
 }
 
